@@ -1,17 +1,13 @@
-# This is a basic workflow to help you get started with Actions
+name: On Push
 
-name: CI
-
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
-  push:
-    branches: [ "main","dev" ]
-  pull_request:
-    branches: [ "main","dev"]
-
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+  push:
+    branches:
+      - master
+      - main
+      - dev
+
 jobs:
   app_build:
     name: Github, Firebase, and Sentry Release
@@ -36,11 +32,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - uses: ./.github/actions/release-number.yml
+      - uses: ./.github/actions/release-number
         name: Create Release Number
         id: rel_number
 
-      - uses: ./.github/actions/secrets.yml
+      - uses: ./.github/actions/secrets
         name: Inflate Secrets
         with:
           keystore: ${{ secrets.ORIGINAL_KEYSTORE_FILE }}
@@ -48,10 +44,10 @@ jobs:
           firebase-creds: ${{ secrets.FIREBASECREDS }}
           playstore-creds: ${{ secrets.PLAYSTORECREDS }}
 
-      - uses: ./.github/actions/release-notes.yml
+      - uses: ./.github/actions/release-notes
         name: Create Release Notes
 
-      - uses: ./.github/actions/download-translations.yml
+      - uses: ./.github/actions/download-translations
         name: Download Translations
         with:
           lokalise-project: ${{ secrets.LOKALISE_PROJECT }}
@@ -79,6 +75,11 @@ jobs:
           draft: false
           prerelease: true
           files: |
+            ./app/build/outputs/apk/full/release/app-full-release.apk
+            ./app/build/outputs/apk/minimal/release/app-minimal-release.apk
+            ./wear/build/outputs/apk/release/wear-release.apk
+            ./automotive/build/outputs/apk/full/release/automotive-full-release.apk
+            ./automotive/build/outputs/apk/minimal/release/automotive-minimal-release.apk
             ./version.txt
 
       - name: Deploy to Firebase
@@ -103,12 +104,12 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK 17
-        uses: setup-java@v3.11.0
+        uses: actions/setup-java@v3.11.0
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      - uses: cache@v3
+      - uses: actions/cache@v3
         with:
           path: |
             ~/.gradle/caches
@@ -117,11 +118,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - uses: ./.github/actions/release-number.yml
+      - uses: ./.github/actions/create-release-number
         name: Create Release Number
         id: rel_number
 
-      - uses: ./.github/actions/secrets.yml
+      - uses: ./.github/actions/inflate-secrets
         name: Inflate Secrets
         with:
           keystore: ${{ secrets.UPLOAD_KEYSTORE_FILE }}
@@ -129,10 +130,10 @@ jobs:
           firebase-creds: ${{ secrets.FIREBASECREDS }}
           playstore-creds: ${{ secrets.PLAYSTORECREDS }}
 
-      - uses: ./.github/actions/release-notes.yml
+      - uses: ./.github/actions/create-release-notes
         name: Create Release Notes
 
-      - uses: ./.github/actions/download-translations.yml
+      - uses: ./.github/actions/download-translations
         name: Download Translations
         with:
           lokalise-project: ${{ secrets.LOKALISE_PROJECT }}
